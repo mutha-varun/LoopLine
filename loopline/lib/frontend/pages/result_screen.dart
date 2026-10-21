@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:loopline_frontend/backend/arbitrage.dart';
-import 'package:loopline_frontend/backend/detector.dart';
+import 'package:loopline/backend/arbitrage.dart';
+import 'package:loopline/backend/detector.dart';
 
 class ResultsScreen extends StatefulWidget {
   final ArbitrageDetector detector;

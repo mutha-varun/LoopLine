@@ -1,17 +1,23 @@
-# loopline_frontend
+# Loopline
 
-A new Flutter project.
+Loopline is a Flutter app with a local Dart API server for live exchange rates.
 
-## Getting Started
+## Run locally
 
-This project is a starting point for a Flutter application.
+Start the API server from the project root:
 
-A few resources to get you started if this is your first Flutter project:
+```sh
+dart run lib/backend/server.dart
+```
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+By default it listens on port `8000`. Check `http://127.0.0.1:8000/health` (or
+`/`) for `{"status":"ok"}`. Then run the Flutter app:
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+```sh
+flutter run
+```
+
+The iOS simulator uses `127.0.0.1:8000` to reach the server on the Mac. Android
+emulator builds use `10.0.2.2:8000`. For a different address, pass
+`--dart-define=API_URL=http://<host>:<port>` when running Flutter. The server
+port can be changed with the `PORT` environment variable.

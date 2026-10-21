@@ -1,7 +1,7 @@
 import 'dart:math';
 
-import 'package:loopline_frontend/backend/arbitrage.dart';
-import 'package:loopline_frontend/backend/model/edge.dart';
+import 'package:loopline/backend/arbitrage.dart';
+import 'package:loopline/backend/model/edge.dart';
 
 class ArbitrageDetector {
   final List<String> currencies;
@@ -62,7 +62,7 @@ class ArbitrageDetector {
     // so a negative cycle anywhere in the graph is found.
     final dist = List<double>.filled(n, 0);
     final pred = List<int>.filled(n, -1);
-    const eps = 1e-7;
+    const eps = 1e-7; // ignore float-noise loops (< ~0.00001%)
  
     var lastRelaxed = -1;
     for (var pass = 0; pass < n; pass++) {
@@ -132,6 +132,27 @@ class ArbitrageDetector {
     final start = body.indexOf(body.reduce((a, b) => a.compareTo(b) < 0 ? a : b));
     final rotated = [...body.sublist(start), ...body.sublist(0, start)];
     return rotated.join('>');
+  }
+ 
+  /// Best 3-currency loops even when unprofitable. Shows how close a live
+  /// market is to arbitrage (result is usually slightly below 0%).
+  List<Arbitrage> closestLoops({int limit = 5}) {
+    final out = <Arbitrage>[];
+    final n = currencies.length;
+    final keep = (1 - fee) * (1 - fee) * (1 - fee);
+    for (var i = 0; i < n; i++) {
+      for (var j = i + 1; j < n; j++) {
+        for (var k = i + 1; k < n; k++) {
+          if (k == j) continue;
+          final a = currencies[i], b = currencies[j], c = currencies[k];
+          final ab = rates[a]?[b], bc = rates[b]?[c], ca = rates[c]?[a];
+          if (ab == null || bc == null || ca == null) continue;
+          out.add(Arbitrage([a, b, c, a], ab * bc * ca * keep));
+        }
+      }
+    }
+    out.sort((x, y) => y.profitFactor.compareTo(x.profitFactor));
+    return out.take(limit).toList();
   }
 }
  
