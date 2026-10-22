@@ -247,7 +247,7 @@ class _InputScreenState extends State<InputScreen> {
     final theme = Theme.of(context);
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Arbitrage Tracker'),
+        title: const Text('LoopLine'),
         backgroundColor: Colors.transparent,
       ),
       body: ListView(
