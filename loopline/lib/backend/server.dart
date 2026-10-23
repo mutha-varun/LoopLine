@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:dotenv/dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:loopline/backend/arbitrage.dart';
 import 'package:loopline/backend/detector.dart';
@@ -11,35 +12,29 @@ import 'package:shelf_router/shelf_router.dart';
 
 final _client = http.Client();
 
-/// Default OANDA pairs for Finnhub. One direction per pair only -- the
-/// reverse edge is derived in FinnhubProvider as 1/p, so subscriptions
-/// stay at n pairs instead of 2n. Keep this list short: every pair is a
-/// live subscription, and a wider currency picker in the UI should trim
-/// pairs/currencies down to what's actually selected rather than growing
-/// this default set.
 const _finnhubPairs = [
   'EUR_USD', 'GBP_USD', 'USD_JPY', 'USD_CHF',
   'USD_CAD', 'AUD_USD', 'NZD_USD', 'EUR_GBP',
 ];
+final env = DotEnv()..load();
+final FinnhubProvider? _finnhub = _createFinnhubProvider();
 
-// Run with:  FINNHUB_API_KEY=your_key dart run bin/server.dart
-final String _finnhubApiKey = "dap48ipr01qj9mns6160dap48ipr01qj9mns616g";
-final FinnhubProvider _finnhub =  FinnhubProvider(apiKey: _finnhubApiKey, pairs: _finnhubPairs);
+FinnhubProvider? _createFinnhubProvider() {
+  final apiKey = env['FINNHUB_API']?.trim();
+  if (apiKey == null || apiKey.isEmpty) return null;
+  return FinnhubProvider(apiKey: apiKey, pairs: _finnhubPairs);
+}
 
 final _providers = <String, RateProvider>{
   for (final p in <RateProvider>[
     OkxProvider(_client),
     EcbProvider(_client),
-    if (_finnhub != null) _finnhub, // top-level final isn't promoted by the null check above
+    ?_finnhub,
   ])
     p.id: p,
 };
 final _cache = SnapshotCache();
 
-/// Debounces repeated /api/arbitrage computation for the same
-/// (source, assets, fee) combination -- protects Bellman-Ford from being
-/// re-run on every request if the client or a tick burst fires faster
-/// than this window.
 class _ArbitrageDebounce {
   final Map<String, _ArbitrageResult> _cached = {};
   static const window = Duration(milliseconds: 300);
@@ -143,8 +138,7 @@ Future<_Ctx> _prepare(Request req) async {
         400, 'Unknown source. Use one of: ${_providers.keys.join(', ')}');
   }
   final assets = _assets(q['assets'], provider.defaultAssets);
-  // Fail fast with a readable error instead of hanging until the client
-  // times out (e.g. Finnhub WebSocket connected but no ticks arrived yet).
+
   final snapshot = await _cache.get(provider).timeout(
         const Duration(seconds: 12),
         onTimeout: () => throw _HttpError(
@@ -173,8 +167,6 @@ Future<Response> _arbitrage(Request req) async {
       (double.tryParse(q['fee'] ?? '') ?? 0.1).clamp(0.0, 5.0).toDouble();
   final minProfit = double.tryParse(q['minProfit'] ?? '') ?? 0.0;
 
-  // Debounce key: same source + same asset set + same fee => same recompute
-  // window, independent of how often the client or upstream ticks fire.
   final debounceKey =
       '${c.provider.id}|${c.graph.currencies.join(",")}|$feePercent|$minProfit';
   final cached = _arbitrageDebounce.get(debounceKey);
@@ -247,7 +239,7 @@ Future<void> main() async {
   print('Arbitrage API listening on port ${server.port}');
   print('Open http://127.0.0.1:${server.port}/health  (0.0.0.0 is only the bind address; do not use it as a client URL)');
   if (_finnhub == null) {
-    print('FINNHUB_API_KEY not set -- finnhub source disabled (okx/ecb still work)');
+    print('FINNHUB_API not set -- finnhub source disabled (okx/ecb still work)');
   } else {
     print('Finnhub WebSocket connecting for: ${_finnhubPairs.join(", ")}');
   }

@@ -39,6 +39,7 @@ dependencies:
   shelf_router: ^1.1.4
   shelf_cors_headers: ^0.1.5
   web_socket_channel: ^3.0.3
+  dotenv: ^4.2.0
 
 dev_dependencies:
   flutter_test:
