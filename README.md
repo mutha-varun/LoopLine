@@ -45,6 +45,13 @@ loopline/
   └── main.dart    # Execution start
 ```
 
+##  Screen Images
+<img height="400" alt="Screenshot 2026-10-24 at 3 06 11 PM" src="https://github.com/user-attachments/assets/0f38aa2b-53b2-4d1e-a1c4-5edf638eb880" /> <img height="400" alt="Screenshot 2026-10-24 at 3 04 08 PM" src="https://github.com/user-attachments/assets/fa38d596-32a4-496b-9104-1a52b6d8b1d8" /> <br>
+<img height="400" alt="Screenshot 2026-10-24 at 3 04 47 PM" src="https://github.com/user-attachments/assets/686779df-6e2a-403b-a0c2-4e516c875f92" />
+<img height="400" alt="Screenshot 2026-10-24 at 3 05 06 PM" src="https://github.com/user-attachments/assets/4f119411-ac44-472e-b727-0613eaac2b9f" />
+
+
+
 
 ### Prerequisites
 
